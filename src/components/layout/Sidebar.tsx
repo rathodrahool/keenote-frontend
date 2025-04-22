@@ -20,35 +20,30 @@ const SidebarLink = ({ icon, label, isActive = false, isCollapsed = false }: Sid
   <a 
     href="#" 
     className={`
-      group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg
-      transition-all duration-200 ease-in-out relative whitespace-nowrap
+      group flex items-center px-5 py-3 text-sm font-medium
+      transition-all duration-150 ease-in-out relative
       ${isActive 
-        ? 'bg-emerald-50 text-emerald-600' 
-        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+        ? 'bg-emerald-50/80 text-emerald-600 border-l-[3px] border-emerald-500' 
+        : 'text-gray-600 hover:bg-gray-100/60 hover:text-gray-900 border-l-[3px] border-transparent'
       }
     `}
   >
     <div className={`
-      flex-shrink-0 min-w-[20px]
-      ${isActive ? 'text-emerald-600' : 'text-gray-500'}
+      flex-shrink-0 transition-colors duration-150 w-5 h-5 flex items-center justify-center
+      ${isActive 
+        ? 'text-emerald-600' 
+        : 'text-gray-400 group-hover:text-gray-600'
+      }
     `}>
       {icon}
     </div>
     <span className={`
-      ml-3 transition-all duration-300
-      ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}
+      ml-3.5 font-medium transition-all duration-150 whitespace-nowrap
+      ${isCollapsed ? 'opacity-0 w-0 -translate-x-2' : 'opacity-100 w-auto translate-x-0'}
+      ${isActive ? 'text-emerald-600' : 'text-gray-600 group-hover:text-gray-900'}
     `}>
       {label}
     </span>
-    {isCollapsed && (
-      <div className="
-        absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs
-        rounded opacity-0 group-hover:opacity-100 transition-opacity
-        pointer-events-none whitespace-nowrap z-50
-      ">
-        {label}
-      </div>
-    )}
   </a>
 );
 
