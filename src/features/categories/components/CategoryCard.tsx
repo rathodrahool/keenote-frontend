@@ -8,9 +8,10 @@ interface CategoryCardProps {
   onEdit: () => void;
   onArchive: () => void;
   onDelete: () => void;
+  isArchived?: boolean;
 }
 
-export const CategoryCard = ({ name, color, tasksCount, onEdit, onArchive, onDelete }: CategoryCardProps) => {
+export const CategoryCard = ({ name, color, tasksCount, onEdit, onArchive, onDelete, isArchived = false }: CategoryCardProps) => {
   return (
     <div className="group bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-150">
       <div className="p-4">
@@ -21,10 +22,10 @@ export const CategoryCard = ({ name, color, tasksCount, onEdit, onArchive, onDel
         
         <div className="mt-4 flex items-center justify-between">
           <span className="text-sm text-gray-500">{tasksCount} tasks</span>
-          <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <ActionButton onClick={onEdit} icon={<PencilIcon className="w-4 h-4" />} />
-            <ActionButton onClick={onArchive} icon={<ArchiveBoxIcon className="w-4 h-4" />} />
-            <ActionButton onClick={onDelete} icon={<TrashIcon className="w-4 h-4" />} danger />
+          <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <ActionButton icon={<PencilIcon className="w-5 h-5" />} onClick={onEdit} tooltip="Edit category" />
+            <ActionButton icon={<ArchiveBoxIcon className="w-5 h-5" />} onClick={onArchive} tooltip={isArchived ? "Unarchive category" : "Archive category"} />
+            <ActionButton icon={<TrashIcon className="w-5 h-5" />} onClick={onDelete} tooltip="Delete category" danger />
           </div>
         </div>
       </div>
@@ -32,19 +33,32 @@ export const CategoryCard = ({ name, color, tasksCount, onEdit, onArchive, onDel
   );
 };
 
-const ActionButton = ({ 
-  icon, 
-  onClick, 
-  danger = false 
-}: { 
-  icon: React.ReactNode; 
-  onClick: () => void; 
-  danger?: boolean; 
-}) => (
+interface ActionButtonProps {
+  icon: React.ReactNode;
+  onClick?: () => void;
+  tooltip: string;
+  danger?: boolean;
+}
+
+const ActionButton = ({ icon, onClick, tooltip, danger }: ActionButtonProps) => (
   <button
     onClick={onClick}
-    className={`p-1 ${danger ? 'text-gray-400 hover:text-red-600' : 'text-gray-400 hover:text-gray-600'}`}
+    className={`
+      p-2 rounded-md relative group/tooltip
+      ${danger 
+        ? 'text-gray-400 hover:text-red-600 hover:bg-red-50' 
+        : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+      }
+    `}
   >
     {icon}
+    <span className="
+      absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 
+      bg-gray-900 text-white text-xs rounded
+      opacity-0 group-hover/tooltip:opacity-100 
+      pointer-events-none transition-opacity whitespace-nowrap
+    ">
+      {tooltip}
+    </span>
   </button>
 );
