@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import {
   HomeIcon,
   FolderIcon,
@@ -12,40 +13,44 @@ import {
 interface SidebarLinkProps {
   icon: React.ReactNode;
   label: string;
-  isActive?: boolean;
   isCollapsed?: boolean;
 }
 
-const SidebarLink = ({ icon, label, isActive = false, isCollapsed = false }: SidebarLinkProps) => (
-  <a 
-    href="#" 
-    className={`
-      group flex items-center px-5 py-3 text-sm font-medium
-      transition-all duration-150 ease-in-out relative
-      ${isActive 
-        ? 'bg-emerald-50/80 text-emerald-600 border-l-[3px] border-emerald-500' 
-        : 'text-gray-600 hover:bg-gray-100/60 hover:text-gray-900 border-l-[3px] border-transparent'
-      }
-    `}
-  >
-    <div className={`
-      flex-shrink-0 transition-colors duration-150 w-5 h-5 flex items-center justify-center
-      ${isActive 
-        ? 'text-emerald-600' 
-        : 'text-gray-400 group-hover:text-gray-600'
-      }
-    `}>
-      {icon}
-    </div>
-    <span className={`
-      ml-3.5 font-medium transition-all duration-150 whitespace-nowrap
-      ${isCollapsed ? 'opacity-0 w-0 -translate-x-2' : 'opacity-100 w-auto translate-x-0'}
-      ${isActive ? 'text-emerald-600' : 'text-gray-600 group-hover:text-gray-900'}
-    `}>
-      {label}
-    </span>
-  </a>
-);
+const SidebarLink = ({ icon, label, to, isCollapsed = false }: SidebarLinkProps & { to: string }) => {
+  const location = useLocation();
+  const isActive = location.pathname === to;
+
+  return (
+    <Link 
+      to={to}
+      className={`
+        group flex items-center px-5 py-3 text-sm font-medium
+        transition-all duration-150 ease-in-out relative
+        ${isActive 
+          ? 'bg-emerald-50/80 text-emerald-600 border-l-[3px] border-emerald-500' 
+          : 'text-gray-600 hover:bg-gray-100/60 hover:text-gray-900 border-l-[3px] border-transparent'
+        }
+      `}
+    >
+      <div className={`
+        flex-shrink-0 transition-colors duration-150 w-5 h-5 flex items-center justify-center
+        ${isActive 
+          ? 'text-emerald-600' 
+          : 'text-gray-400 group-hover:text-gray-600'
+        }
+      `}>
+        {icon}
+      </div>
+      <span className={`
+        ml-3.5 font-medium transition-all duration-150 whitespace-nowrap
+        ${isCollapsed ? 'opacity-0 w-0 -translate-x-2' : 'opacity-100 w-auto translate-x-0'}
+        ${isActive ? 'text-emerald-600' : 'text-gray-600 group-hover:text-gray-900'}
+      `}>
+        {label}
+      </span>
+    </Link>
+  );
+};
 
 export const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -72,15 +77,15 @@ export const Sidebar = () => {
 
         <div className="flex flex-col h-full justify-between">
           <nav className="px-3 py-4 space-y-1">
-            <SidebarLink icon={<HomeIcon className="w-5 h-5" />} label="Dashboard" isCollapsed={isCollapsed} />
-            <SidebarLink icon={<FolderIcon className="w-5 h-5" />} label="Categories" isActive={true} isCollapsed={isCollapsed} />
-            <SidebarLink icon={<ClockIcon className="w-5 h-5" />} label="Tasks" isCollapsed={isCollapsed} />
-            <SidebarLink icon={<ChartBarSquareIcon className="w-5 h-5" />} label="Reports" isCollapsed={isCollapsed} />
+            <SidebarLink icon={<HomeIcon className="w-5 h-5" />} label="Dashboard" to="/" isCollapsed={isCollapsed} />
+            <SidebarLink icon={<FolderIcon className="w-5 h-5" />} label="Categories" to="/categories" isCollapsed={isCollapsed} />
+            <SidebarLink icon={<ClockIcon className="w-5 h-5" />} label="Tasks" to="/tasks" isCollapsed={isCollapsed} />
+            <SidebarLink icon={<ChartBarSquareIcon className="w-5 h-5" />} label="Reports" to="/reports" isCollapsed={isCollapsed} />
           </nav>
           
           <div className="mt-auto border-t border-gray-200">
             <div className="px-3 py-4">
-              <SidebarLink icon={<Cog6ToothIcon className="w-5 h-5" />} label="Settings" isCollapsed={isCollapsed} />
+              <SidebarLink icon={<Cog6ToothIcon className="w-5 h-5" />} label="Settings" to="/settings" isCollapsed={isCollapsed} />
             </div>
           </div>
         </div>

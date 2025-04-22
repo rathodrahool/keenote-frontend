@@ -5,10 +5,12 @@ import { CategoryCard } from '../components/CategoryCard';
 import { CategoryModal } from '../components/CategoryModal';
 import { useCategories } from '../../../context/CategoryContext';
 import { DeleteConfirmationModal } from '../components/DeleteConfirmationModal';
+import { useSearchParams } from 'react-router-dom';
 
 export const CategoriesPage = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('view') === 'archived' ? 'archived' : 'active';
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active');
   const [categoryToDelete, setCategoryToDelete] = useState<{id: string; name: string} | null>(null);
   const [categoryToEdit, setCategoryToEdit] = useState<{id: string; name: string; color: string} | null>(null);
   const { categories, addCategory, updateCategory, deleteCategory, archiveCategory } = useCategories();
@@ -35,7 +37,7 @@ export const CategoriesPage = () => {
       <div className="border-b border-gray-200">
         <div className="flex space-x-8">
           <button
-            onClick={() => setActiveTab('active')}
+            onClick={() => setSearchParams({})}
             className={`
               py-4 px-1 border-b-2 font-medium text-sm transition-colors relative
               ${activeTab === 'active' 
@@ -46,7 +48,7 @@ export const CategoriesPage = () => {
             Active
           </button>
           <button
-            onClick={() => setActiveTab('archived')}
+            onClick={() => setSearchParams({ view: 'archived' })}
             className={`
               py-4 px-1 border-b-2 font-medium text-sm transition-colors relative
               ${activeTab === 'archived'
