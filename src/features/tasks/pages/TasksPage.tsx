@@ -8,7 +8,7 @@ import { Task } from '../../../types/task';
 export const TasksPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | undefined>();
-  const { tasks, addTask, updateTask, deleteTask, toggleTaskStatus } = useTasks();
+  const { tasks, addTask, updateTask, deleteTask, toggleTaskCompletion } = useTasks();
 
   const handleSubmit = (data: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (editingTask) {
@@ -29,6 +29,10 @@ export const TasksPage = () => {
     setEditingTask(undefined);
   };
 
+  const handleToggleCompletion = (taskId: string) => {
+    toggleTaskCompletion(taskId);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -47,7 +51,7 @@ export const TasksPage = () => {
         tasks={tasks}
         onEdit={handleEdit}
         onDelete={deleteTask}
-        onToggleStatus={toggleTaskStatus}
+        onToggleCompletion={handleToggleCompletion}
       />
 
       {/* Task Form Modal */}

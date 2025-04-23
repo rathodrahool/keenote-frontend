@@ -19,13 +19,13 @@ interface TaskTableProps {
   tasks: Task[];
   onEdit: (task: Task) => void;
   onDelete: (id: string) => void;
-  onToggleStatus: (id: string) => void;
+  onToggleCompletion?: (taskId: string) => void;  // Add this prop
 }
 
 type SortField = 'title' | 'category' | 'type' | 'frequency' | 'status' | 'startDate';
 type SortOrder = 'asc' | 'desc';
 
-export const TaskTable = ({ tasks, onEdit, onDelete, onToggleStatus }: TaskTableProps) => {
+export const TaskTable = ({ tasks, onEdit, onDelete, onToggleCompletion }: TaskTableProps) => {
   const { categories } = useCategories();
   const { startTimer, stopTimer } = useTasks();
   const [currentPage, setCurrentPage] = useState(1);
@@ -170,17 +170,19 @@ export const TaskTable = ({ tasks, onEdit, onDelete, onToggleStatus }: TaskTable
                       <span className="text-sm text-gray-600">
                         {task.completionsToday || 0}/{task.maxCompletions} today
                       </span>
-                      <button
-                        onClick={() => onToggleStatus(task.id)}
-                        disabled={task.completionsToday >= task.maxCompletions}
-                        className={`p-2 rounded-full ${
-                          task.completionsToday >= task.maxCompletions
-                            ? 'bg-gray-100 text-gray-400'
-                            : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-600'
-                        }`}
-                      >
-                        <SolidCheckCircleIcon className="w-5 h-5" />
-                      </button>
+                      {onToggleCompletion && (
+                        <button
+                          onClick={() => onToggleCompletion(task.id)}
+                          disabled={task.completionsToday >= (task.maxCompletions || 1)}
+                          className={`p-2 rounded-full ${
+                            task.completionsToday >= (task.maxCompletions || 1)
+                              ? 'bg-gray-100 text-gray-400'
+                              : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-600'
+                          }`}
+                        >
+                          <SolidCheckCircleIcon className="w-5 h-5" />
+                        </button>
+                      )}
                     </div>
                   )}
                 </td>
@@ -194,17 +196,6 @@ export const TaskTable = ({ tasks, onEdit, onDelete, onToggleStatus }: TaskTable
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <div className="flex items-center space-x-3">
-                    <button
-                      onClick={() => onToggleStatus(task.id)}
-                      className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-                      title={task.status === 'completed' ? 'Mark as incomplete' : 'Mark as complete'}
-                    >
-                      {task.status === 'completed' ? (
-                        <ArrowPathIcon className="w-5 h-5 text-gray-500 hover:text-emerald-600" />
-                      ) : (
-                        <CheckCircleIcon className="w-5 h-5 text-gray-500 hover:text-emerald-600" />
-                      )}
-                    </button>
                     <button
                       onClick={() => onEdit(task)}
                       className="p-1 rounded-full hover:bg-gray-100 transition-colors"

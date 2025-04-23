@@ -28,6 +28,7 @@ export const TaskFormModal = ({
     endDate: '',
     targetDuration: 0,
     maxCompletions: 1,
+    completionsToday: 0, // Add this initialization
     isActive: true,
     status: 'pending' as const
   });

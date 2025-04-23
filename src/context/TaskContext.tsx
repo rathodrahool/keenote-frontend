@@ -187,6 +187,70 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   };
 
+  const toggleTaskCompletion = (id: string) => {
+    setTasks(prev =>
+      prev.map(task => {
+        if (task.id !== id || task.type !== 'yes-no') return task;
+
+        const completionsToday = (task.completionsToday || 0) + 1;
+        const maxCompletions = task.maxCompletions || 1;
+
+        // Don't update if already at max
+        if (completionsToday > maxCompletions) return task;
+
+        const newStatus = 
+          completionsToday >= maxCompletions ? 'completed' :
+          completionsToday > 0 ? 'in-progress' : 'pending';
+
+        return {
+          ...task,
+          completionsToday,
+          status: newStatus,
+          updatedAt: new Date()
+        };
+      })
+    );
+  };
+
+  // Enhance the midnight reset
+  useEffect(() => {
+    const resetCompletions = () => {
+      setTasks(prev =>
+        prev.map(task => 
+          task.type === 'yes-no' 
+            ? { 
+                ...task, 
+                completionsToday: 0, 
+                status: 'pending',
+                updatedAt: new Date()
+              }
+            : task
+        )
+      );
+    };
+
+    // Initial reset if needed
+    const now = new Date();
+    const lastResetDate = localStorage.getItem('lastResetDate');
+    if (!lastResetDate || new Date(lastResetDate).getDate() !== now.getDate()) {
+      resetCompletions();
+      localStorage.setItem('lastResetDate', now.toISOString());
+    }
+
+    // Set up next midnight reset
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    
+    const timeUntilMidnight = tomorrow.getTime() - now.getTime();
+    const timer = setTimeout(() => {
+      resetCompletions();
+      localStorage.setItem('lastResetDate', tomorrow.toISOString());
+    }, timeUntilMidnight);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const value = {
     tasks,
     addTask,
@@ -199,6 +263,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     deleteTimeEntry,
     getTaskTimeEntries: (taskId: string) => 
       tasks.find(t => t.id === taskId)?.timeEntries || [],
+    toggleTaskCompletion, // Add this to the context value
   };
 
   return (

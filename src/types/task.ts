@@ -30,6 +30,7 @@ export interface Task {
     startTime: Date;
     isRunning: boolean;
   };
+  completionsToday: number; // Make it required, not optional
 }
 
 export interface TaskContextType {
@@ -42,4 +43,5 @@ export interface TaskContextType {
   startTimer: (taskId: string) => void;
   stopTimer: (taskId: string) => void;
   getTaskTimeEntries: (taskId: string) => TimeEntry[];
+  toggleTaskCompletion: (id: string) => void;
 }
