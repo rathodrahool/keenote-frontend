@@ -98,6 +98,57 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   };
 
+  const startTimer = (taskId: string) => {
+    // Stop any running timers first
+    const runningTask = tasks.find(t => t.currentTimer?.isRunning);
+    if (runningTask) {
+      stopTimer(runningTask.id);
+    }
+
+    setTasks(prev =>
+      prev.map(task =>
+        task.id === taskId
+          ? {
+              ...task,
+              currentTimer: {
+                startTime: new Date(),
+                isRunning: true,
+              },
+              status: 'in-progress',
+            }
+          : task
+      )
+    );
+  };
+
+  const stopTimer = (taskId: string) => {
+    setTasks(prev =>
+      prev.map(task => {
+        if (task.id !== taskId || !task.currentTimer?.isRunning) return task;
+
+        const endTime = new Date();
+        const duration = Math.floor(
+          (endTime.getTime() - task.currentTimer.startTime.getTime()) / 60000
+        );
+
+        const newTimeEntry: TimeEntry = {
+          id: uuidv4(),
+          startTime: task.currentTimer.startTime,
+          endTime,
+          duration,
+          isManual: false,
+        };
+
+        return {
+          ...task,
+          currentTimer: undefined,
+          timeEntries: [...(task.timeEntries || []), newTimeEntry],
+          status: duration >= (task.targetDuration || 0) ? 'completed' : 'in-progress',
+        };
+      })
+    );
+  };
+
   const value = {
     tasks,
     addTask,
@@ -105,6 +156,8 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     deleteTask,
     getTasksByCategory,
     toggleTaskStatus,
+    startTimer,
+    stopTimer,
   };
 
   return (

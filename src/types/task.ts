@@ -2,6 +2,14 @@ export type TaskFrequency = 'daily' | 'weekly' | 'monthly' | 'once';
 export type TaskType = 'time-based' | 'yes-no';
 export type TaskStatus = 'pending' | 'in-progress' | 'completed' | 'missed';
 
+export interface TimeEntry {
+  id: string;
+  startTime: Date;
+  endTime?: Date;
+  duration: number; // in minutes
+  isManual: boolean;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -17,6 +25,11 @@ export interface Task {
   status: TaskStatus;
   createdAt: Date;
   updatedAt: Date;
+  timeEntries?: TimeEntry[];
+  currentTimer?: {
+    startTime: Date;
+    isRunning: boolean;
+  };
 }
 
 export interface TaskContextType {
@@ -26,4 +39,7 @@ export interface TaskContextType {
   deleteTask: (id: string) => void;
   getTasksByCategory: (categoryId: string) => Task[];
   toggleTaskStatus: (id: string) => void;
+  startTimer: (taskId: string) => void;
+  stopTimer: (taskId: string) => void;
+  getTaskTimeEntries: (taskId: string) => TimeEntry[];
 }

@@ -11,6 +11,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { Task } from '../../../types/task';
 import { useCategories } from '../../../context/CategoryContext';
+import { TimeTracker } from './TimeTracker';
+import { useTasks } from '../../../context/TaskContext';
 
 interface TaskTableProps {
   tasks: Task[];
@@ -24,6 +26,7 @@ type SortOrder = 'asc' | 'desc';
 
 export const TaskTable = ({ tasks, onEdit, onDelete, onToggleStatus }: TaskTableProps) => {
   const { categories } = useCategories();
+  const { startTimer, stopTimer } = useTasks();
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [sortField, setSortField] = useState<SortField>('startDate');
@@ -109,6 +112,7 @@ export const TaskTable = ({ tasks, onEdit, onDelete, onToggleStatus }: TaskTable
                 { key: 'title', label: 'Title' },
                 { key: 'category', label: 'Category' },
                 { key: 'type', label: 'Type' },
+                { key: 'timer', label: 'Timer' }, // New column
                 { key: 'frequency', label: 'Frequency' },
                 { key: 'status', label: 'Status' },
                 { key: 'startDate', label: 'Start Date' },
@@ -153,6 +157,20 @@ export const TaskTable = ({ tasks, onEdit, onDelete, onToggleStatus }: TaskTable
                     ? `${task.targetDuration} minutes`
                     : `${task.maxCompletions}x per day`
                   }
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {task.type === 'time-based' && (
+                    <TimeTracker
+                      task={task}
+                      onStartTimer={startTimer}
+                      onStopTimer={stopTimer}
+                    />
+                  )}
+                  {task.type === 'yes-no' && (
+                    <span className="text-sm text-gray-500">
+                      {task.completionsToday || 0}/{task.maxCompletions} today
+                    </span>
+                  )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap capitalize">
                   {task.frequency}
