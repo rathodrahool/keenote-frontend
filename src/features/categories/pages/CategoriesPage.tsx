@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PlusIcon, FolderIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, FolderIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { Button } from '../../../components/common/Button';
 import { CategoryCard } from '../components/CategoryCard';
 import { CategoryModal } from '../components/CategoryModal';
@@ -13,24 +13,41 @@ export const CategoriesPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<{id: string; name: string} | null>(null);
   const [categoryToEdit, setCategoryToEdit] = useState<{id: string; name: string; color: string} | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const { categories, addCategory, updateCategory, deleteCategory, archiveCategory } = useCategories();
 
-  const filteredCategories = categories.filter(cat => 
-    activeTab === 'archived' ? cat.isArchived : !cat.isArchived
-  );
+  const filteredCategories = categories.filter(cat => {
+    const matchesTab = activeTab === 'archived' ? cat.isArchived : !cat.isArchived;
+    const matchesSearch = cat.name.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesTab && matchesSearch;
+  });
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header with Search */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Categories</h1>
           <p className="mt-1 text-sm text-gray-500">Manage your task categories</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)}>
-          <PlusIcon className="w-5 h-5 mr-1.5" />
-          Add Category
-        </Button>
+        <div className="flex items-center space-x-4">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search categories"
+              className="w-64 pl-10 pr-4 py-2 border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            />
+          </div>
+          <Button onClick={() => setIsModalOpen(true)}>
+            <PlusIcon className="w-5 h-5 mr-1.5" />
+            Add Category
+          </Button>
+        </div>
       </div>
 
       {/* Tab Navigation */}
@@ -69,15 +86,19 @@ export const CategoriesPage = () => {
               <FolderIcon className="w-8 h-8 text-emerald-500" />
             </div>
             <h3 className="text-lg font-medium text-gray-900">
-              {activeTab === 'archived' 
-                ? 'No archived categories' 
-                : 'No categories yet'
+              {searchTerm 
+                ? 'No matching categories found'
+                : activeTab === 'archived' 
+                  ? 'No archived categories' 
+                  : 'No categories yet'
               }
             </h3>
             <p className="mt-1 text-sm text-gray-500 text-center max-w-sm">
-              {activeTab === 'archived'
-                ? 'Archived categories will appear here'
-                : 'Create your first category to start organizing your tasks'
+              {searchTerm 
+                ? `No categories matching "${searchTerm}"`
+                : activeTab === 'archived'
+                  ? 'Archived categories will appear here'
+                  : 'Create your first category to start organizing your tasks'
               }
             </p>
             {activeTab === 'active' && (
