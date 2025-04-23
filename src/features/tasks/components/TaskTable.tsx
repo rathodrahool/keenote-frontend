@@ -112,10 +112,9 @@ export const TaskTable = ({ tasks, onEdit, onDelete, onToggleStatus }: TaskTable
                 { key: 'title', label: 'Title' },
                 { key: 'category', label: 'Category' },
                 { key: 'type', label: 'Type' },
-                { key: 'timer', label: 'Timer' }, // New column
                 { key: 'frequency', label: 'Frequency' },
+                { key: 'timeTracked', label: 'Time Tracked' },
                 { key: 'status', label: 'Status' },
-                { key: 'startDate', label: 'Start Date' },
                 { key: 'actions', label: 'Actions' }
               ].map(({ key, label }) => (
                 <th
@@ -137,7 +136,7 @@ export const TaskTable = ({ tasks, onEdit, onDelete, onToggleStatus }: TaskTable
           <tbody className="bg-white divide-y divide-gray-200">
             {paginatedTasks.map(task => (
               <tr key={task.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4">
                   <div className="font-medium text-gray-900">{task.title}</div>
                   {task.description && (
                     <div className="text-sm text-gray-500">{task.description}</div>
@@ -166,11 +165,6 @@ export const TaskTable = ({ tasks, onEdit, onDelete, onToggleStatus }: TaskTable
                       onStopTimer={stopTimer}
                     />
                   )}
-                  {task.type === 'yes-no' && (
-                    <span className="text-sm text-gray-500">
-                      {task.completionsToday || 0}/{task.maxCompletions} today
-                    </span>
-                  )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap capitalize">
                   {task.frequency}
@@ -179,9 +173,6 @@ export const TaskTable = ({ tasks, onEdit, onDelete, onToggleStatus }: TaskTable
                   <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(task.status)}`}>
                     {task.status}
                   </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {task.startDate.toLocaleDateString()}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <div className="flex items-center space-x-3">

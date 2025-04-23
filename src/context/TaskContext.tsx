@@ -1,55 +1,38 @@
-import React, { createContext, useContext, useState, useMemo } from 'react';
+import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Task, TaskContextType } from '../types/task';
+import { Task, TaskContextType, TimeEntry } from '../types/task';
 import { useToast } from './ToastContext';
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
 
 export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: '1',
-      title: 'Daily Workout',
-      description: 'Morning exercise routine',
-      categoryId: '1', // Work category
-      type: 'time-based',
-      frequency: 'daily',
-      startDate: new Date(),
-      targetDuration: 30,
-      isActive: true,
-      status: 'pending',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    {
-      id: '2',
-      title: 'Read a Book',
-      description: 'Read at least one chapter',
-      categoryId: '2', // Personal category
-      type: 'time-based',
-      frequency: 'daily',
-      startDate: new Date(),
-      targetDuration: 45,
-      isActive: true,
-      status: 'completed',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    {
-      id: '3',
-      title: 'Grocery Shopping',
-      description: 'Buy weekly groceries',
-      categoryId: '3', // Shopping category
-      type: 'yes-no',
-      frequency: 'weekly',
-      startDate: new Date(),
-      maxCompletions: 1,
-      isActive: true,
-      status: 'pending',
-      createdAt: new Date(),
-      updatedAt: new Date()
+  // Initialize from localStorage if available
+  const [tasks, setTasks] = useState<Task[]>(() => {
+    const saved = localStorage.getItem('tasks');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return parsed.map((task: any) => ({
+        ...task,
+        startDate: new Date(task.startDate),
+        endDate: task.endDate ? new Date(task.endDate) : undefined,
+        currentTimer: task.currentTimer ? {
+          ...task.currentTimer,
+          startTime: new Date(task.currentTimer.startTime)
+        } : undefined,
+        timeEntries: (task.timeEntries || []).map((entry: any) => ({
+          ...entry,
+          startTime: new Date(entry.startTime),
+          endTime: entry.endTime ? new Date(entry.endTime) : undefined
+        }))
+      }));
     }
-  ]);
+    return [];
+  });
+
+  // Persist to localStorage on changes
+  useEffect(() => {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+  }, [tasks]);
 
   const { showToast } = useToast();
 
@@ -149,6 +132,19 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   };
 
+  const deleteTimeEntry = (taskId: string, entryId: string) => {
+    setTasks(prev =>
+      prev.map(task =>
+        task.id === taskId
+          ? {
+              ...task,
+              timeEntries: task.timeEntries?.filter(entry => entry.id !== entryId)
+            }
+          : task
+      )
+    );
+  };
+
   const value = {
     tasks,
     addTask,
@@ -158,6 +154,9 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     toggleTaskStatus,
     startTimer,
     stopTimer,
+    deleteTimeEntry,
+    getTaskTimeEntries: (taskId: string) => 
+      tasks.find(t => t.id === taskId)?.timeEntries || [],
   };
 
   return (
