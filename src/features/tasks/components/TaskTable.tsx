@@ -87,6 +87,21 @@ export const TaskTable = ({ tasks, onEdit, onDelete, onToggleCompletion }: TaskT
     }
   };
 
+  const getFrequencyBadge = (frequency: Task['frequency']) => {
+    const colors = {
+      daily: 'bg-blue-50 text-blue-700',
+      weekly: 'bg-purple-50 text-purple-700',
+      monthly: 'bg-orange-50 text-orange-700',
+      once: 'bg-gray-50 text-gray-700'
+    };
+
+    return (
+      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${colors[frequency]}`}>
+        {frequency.charAt(0).toUpperCase() + frequency.slice(1)}
+      </span>
+    );
+  };
+
   return (
     <div className="space-y-4">
       {/* Search */}
@@ -153,10 +168,17 @@ export const TaskTable = ({ tasks, onEdit, onDelete, onToggleCompletion }: TaskT
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {task.type === 'time-based' 
-                    ? `${task.targetDuration} minutes`
-                    : `${task.maxCompletions}x per day`
-                  }
+                  <div className="flex flex-col space-y-1">
+                    <span className="text-sm font-medium text-gray-900">
+                      {task.type === 'time-based' 
+                        ? `${task.targetDuration} min goal`
+                        : `${task.maxCompletions}x per day`
+                      }
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {task.type === 'time-based' ? 'Time-based' : 'Completion-based'}
+                    </span>
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {task.type === 'time-based' ? (
@@ -186,8 +208,8 @@ export const TaskTable = ({ tasks, onEdit, onDelete, onToggleCompletion }: TaskT
                     </div>
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap capitalize">
-                  {task.frequency}
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {getFrequencyBadge(task.frequency)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(task.status)}`}>

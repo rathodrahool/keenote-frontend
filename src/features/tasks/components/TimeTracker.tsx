@@ -43,17 +43,33 @@ export const TimeTracker = ({ task, onStartTimer, onStopTimer }: TimeTrackerProp
   };
 
   return (
-    <div className="flex items-center justify-between w-full">
-      <div className="flex items-center space-x-2">
-        <ClockIcon className="w-5 h-5 text-gray-400" />
-        <span className="text-sm text-gray-600">
-          Total: {getTotalTrackedTime(task.timeEntries)} min
-        </span>
-      </div>
-      <div className="flex items-center space-x-2">
+    <div className="flex flex-col space-y-2 w-full">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <ClockIcon className="w-4 h-4 text-gray-400" />
+          <span className="text-sm font-medium text-gray-700">
+            {getTotalTrackedTime(task.timeEntries)}/{task.targetDuration} min
+          </span>
+        </div>
         {task.currentTimer?.isRunning && (
-          <span className="font-mono text-sm">{formatTime(elapsedTime)}</span>
+          <span className="font-mono text-sm text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
+            {formatTime(elapsedTime)}
+          </span>
         )}
+      </div>
+      
+      <div className="flex items-center justify-between">
+        <div className="w-full bg-gray-100 rounded-full h-1.5 mr-3">
+          <div 
+            className="bg-emerald-500 h-1.5 rounded-full transition-all duration-300"
+            style={{ 
+              width: `${Math.min(
+                (getTotalTrackedTime(task.timeEntries) / (task.targetDuration || 1)) * 100, 
+                100
+              )}%` 
+            }}
+          />
+        </div>
         {task.currentTimer?.isRunning ? (
           <button
             onClick={() => onStopTimer(task.id)}
