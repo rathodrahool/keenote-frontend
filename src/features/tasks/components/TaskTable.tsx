@@ -13,6 +13,7 @@ import { Task } from '../../../types/task';
 import { useCategories } from '../../../context/CategoryContext';
 import { TimeTracker } from './TimeTracker';
 import { useTasks } from '../../../context/TaskContext';
+import { CheckCircleIcon as SolidCheckCircleIcon } from '@heroicons/react/24/solid';
 
 interface TaskTableProps {
   tasks: Task[];
@@ -158,12 +159,29 @@ export const TaskTable = ({ tasks, onEdit, onDelete, onToggleStatus }: TaskTable
                   }
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {task.type === 'time-based' && (
+                  {task.type === 'time-based' ? (
                     <TimeTracker
                       task={task}
                       onStartTimer={startTimer}
                       onStopTimer={stopTimer}
                     />
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">
+                        {task.completionsToday || 0}/{task.maxCompletions} today
+                      </span>
+                      <button
+                        onClick={() => onToggleStatus(task.id)}
+                        disabled={task.completionsToday >= task.maxCompletions}
+                        className={`p-2 rounded-full ${
+                          task.completionsToday >= task.maxCompletions
+                            ? 'bg-gray-100 text-gray-400'
+                            : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-600'
+                        }`}
+                      >
+                        <SolidCheckCircleIcon className="w-5 h-5" />
+                      </button>
+                    </div>
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap capitalize">

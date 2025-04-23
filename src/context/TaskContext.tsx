@@ -69,17 +69,59 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const toggleTaskStatus = (id: string) => {
     setTasks(prev =>
-      prev.map(task =>
-        task.id === id
-          ? {
-              ...task,
-              status: task.status === 'completed' ? 'pending' : 'completed',
-              updatedAt: new Date(),
-            }
-          : task
-      )
+      prev.map(task => {
+        if (task.id !== id) return task;
+
+        if (task.type === 'yes-no') {
+          const today = new Date().toDateString();
+          const completionsToday = task.completionsToday || 0;
+          
+          // Don't allow more completions than max
+          if (completionsToday >= (task.maxCompletions || 1)) {
+            return task;
+          }
+
+          return {
+            ...task,
+            completionsToday: completionsToday + 1,
+            status: completionsToday + 1 >= (task.maxCompletions || 1) ? 'completed' : 'in-progress',
+            updatedAt: new Date()
+          };
+        }
+
+        // Handle time-based tasks as before
+        return {
+          ...task,
+          status: task.status === 'completed' ? 'pending' : 'completed',
+          updatedAt: new Date()
+        };
+      })
     );
   };
+
+  // Reset completions at midnight
+  useEffect(() => {
+    const resetCompletions = () => {
+      setTasks(prev =>
+        prev.map(task => 
+          task.type === 'yes-no' 
+            ? { ...task, completionsToday: 0, status: 'pending' }
+            : task
+        )
+      );
+    };
+
+    // Check if we need to reset on initial load
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    
+    const timeUntilMidnight = tomorrow.getTime() - now.getTime();
+    const timer = setTimeout(resetCompletions, timeUntilMidnight);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const startTimer = (taskId: string) => {
     // Stop any running timers first
