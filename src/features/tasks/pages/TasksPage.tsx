@@ -1,17 +1,14 @@
 import React, { useState } from 'react';
 import { Button } from '../../../components/common/Button';
-import { TaskList } from '../components/TaskList';
+import { TaskTable } from '../components/TaskTable';
 import { TaskFormModal } from '../components/TaskFormModal';
 import { useTasks } from '../../../context/TaskContext';
-import { useCategories } from '../../../context/CategoryContext';
 import { Task } from '../../../types/task';
 
 export const TasksPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | undefined>();
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const { addTask, updateTask } = useTasks();
-  const { categories } = useCategories();
+  const { tasks, addTask, updateTask, deleteTask, toggleTaskStatus } = useTasks();
 
   const handleSubmit = (data: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (editingTask) {
@@ -20,6 +17,11 @@ export const TasksPage = () => {
       addTask(data);
     }
     handleCloseModal();
+  };
+
+  const handleEdit = (task: Task) => {
+    setEditingTask(task);
+    setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
@@ -40,36 +42,12 @@ export const TasksPage = () => {
         </Button>
       </div>
 
-      {/* Category Filter */}
-      <div className="flex space-x-4 border-b border-gray-200">
-        <button
-          className={`px-4 py-2 border-b-2 ${
-            selectedCategory === 'all'
-              ? 'border-emerald-500 text-emerald-600'
-              : 'border-transparent text-gray-500'
-          }`}
-          onClick={() => setSelectedCategory('all')}
-        >
-          All Tasks
-        </button>
-        {categories.map(category => (
-          <button
-            key={category.id}
-            className={`px-4 py-2 border-b-2 ${
-              selectedCategory === category.id
-                ? 'border-emerald-500 text-emerald-600'
-                : 'border-transparent text-gray-500'
-            }`}
-            onClick={() => setSelectedCategory(category.id)}
-          >
-            {category.name}
-          </button>
-        ))}
-      </div>
-
-      {/* Task List */}
-      <TaskList 
-        categoryId={selectedCategory === 'all' ? undefined : selectedCategory} 
+      {/* Task Table */}
+      <TaskTable
+        tasks={tasks}
+        onEdit={handleEdit}
+        onDelete={deleteTask}
+        onToggleStatus={toggleTaskStatus}
       />
 
       {/* Task Form Modal */}
