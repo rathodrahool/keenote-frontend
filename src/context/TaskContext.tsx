@@ -6,7 +6,51 @@ import { useToast } from './ToastContext';
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
 
 export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([
+    {
+      id: '1',
+      title: 'Daily Workout',
+      description: 'Morning exercise routine',
+      categoryId: '1', // Work category
+      type: 'time-based',
+      frequency: 'daily',
+      startDate: new Date(),
+      targetDuration: 30,
+      isActive: true,
+      status: 'pending',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      id: '2',
+      title: 'Read a Book',
+      description: 'Read at least one chapter',
+      categoryId: '2', // Personal category
+      type: 'time-based',
+      frequency: 'daily',
+      startDate: new Date(),
+      targetDuration: 45,
+      isActive: true,
+      status: 'completed',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      id: '3',
+      title: 'Grocery Shopping',
+      description: 'Buy weekly groceries',
+      categoryId: '3', // Shopping category
+      type: 'yes-no',
+      frequency: 'weekly',
+      startDate: new Date(),
+      maxCompletions: 1,
+      isActive: true,
+      status: 'pending',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+  ]);
+
   const { showToast } = useToast();
 
   const addTask = (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
