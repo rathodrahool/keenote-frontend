@@ -1,6 +1,6 @@
 import { BaseApiService } from './BaseApiService';
 import { API_ENDPOINTS } from '../../config/api.config';
-import { Category, CreateCategoryDto, ApiResponse, FindAllQuery } from '../../types/category';
+import { Category, CreateCategoryDto, ApiResponse, FindAllQuery, Status } from '../../types/category';
 
 export class CategoryService extends BaseApiService {
   private static instance: CategoryService;
@@ -63,10 +63,38 @@ export class CategoryService extends BaseApiService {
   }
 
   async archiveCategory(id: string): Promise<ApiResponse<Category>> {
-    return this.updateCategory(id, { is_archived: true });
+    return this.updateCategory(id, { 
+      is_archived: true,
+      status: Status.INACTIVE
+    });
   }
 
   async unarchiveCategory(id: string): Promise<ApiResponse<Category>> {
-    return this.updateCategory(id, { is_archived: false });
+    return this.updateCategory(id, { 
+      is_archived: false,
+      status: Status.ACTIVE
+    });
+  }
+
+  // Helper method to check if a category is archived
+  isArchived(category: Category): boolean {
+    return category.is_archived === true;
+  }
+
+  // Helper method to get filtered categories
+  async getArchivedCategories(query?: FindAllQuery): Promise<ApiResponse<Category[]>> {
+    const queryString = this.buildQueryString({
+      ...query,
+      order: { ...query?.order, is_archived: 1 }
+    });
+    return this.get<ApiResponse<Category[]>>(`${API_ENDPOINTS.category}${queryString}`);
+  }
+
+  async getActiveCategories(query?: FindAllQuery): Promise<ApiResponse<Category[]>> {
+    const queryString = this.buildQueryString({
+      ...query,
+      order: { ...query?.order, is_archived: -1 }
+    });
+    return this.get<ApiResponse<Category[]>>(`${API_ENDPOINTS.category}${queryString}`);
   }
 } 
