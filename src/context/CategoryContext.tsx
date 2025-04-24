@@ -1,40 +1,60 @@
-import React, { createContext, useContext, useState, useMemo } from 'react';
-import { Category, CategoryContextType } from '../types/category';
-import { v4 as uuidv4 } from 'uuid';
+import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
+import { Category, CategoryContextType, CreateCategoryDto, PaginationMeta } from '../types/category';
+import { useCategoryService } from '../hooks/useCategoryService';
+import { ApiError } from '../services/api/BaseApiService';
+import { useToast } from './ToastContext';
 
 const CategoryContext = createContext<CategoryContextType | undefined>(undefined);
 
 export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [categories, setCategories] = useState<Category[]>([
-    {
-      id: '1',
-      name: 'Work',
-      color: '#10B981',
-      isArchived: false,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    {
-      id: '2',
-      name: 'Personal',
-      color: '#3B82F6',
-      isArchived: false,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    {
-      id: '3',
-      name: 'Shopping',
-      color: '#F59E0B',
-      isArchived: false,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }
-  ]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'date'>('name');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
+
+  const { addToast } = useToast();
+  const {
+    getCategories,
+    createCategory: apiCreateCategory,
+    updateCategory: apiUpdateCategory,
+    deleteCategory: apiDeleteCategory,
+    archiveCategory: apiArchiveCategory,
+  } = useCategoryService();
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setIsLoading(true);
+        const response = await getCategories({
+          search: searchTerm,
+          order: {
+            [sortBy === 'name' ? 'name' : 'created_at']: 'asc'
+          }
+        });
+        setCategories(response.data || []);
+        setPagination(response.meta || null);
+        setError(null);
+      } catch (err) {
+        const errorMessage = err instanceof ApiError ? err.message : 'Failed to fetch categories';
+        setError(errorMessage);
+        addToast({
+          type: 'error',
+          message: errorMessage
+        });
+        setCategories([]); // Reset categories on error
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, [getCategories, searchTerm, sortBy, addToast]);
 
   const filteredAndSortedCategories = useMemo(() => {
+    if (!Array.isArray(categories)) return [];
+    
     return categories
       .filter(cat => 
         cat.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -43,36 +63,96 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (sortBy === 'name') {
           return a.name.localeCompare(b.name);
         }
-        return b.createdAt.getTime() - a.createdAt.getTime();
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
   }, [categories, searchTerm, sortBy]);
 
-  const addCategory = (categoryData: Omit<Category, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newCategory: Category = {
-      ...categoryData,
-      id: uuidv4(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    setCategories(prev => [...prev, newCategory]);
+  const addCategory = async (categoryData: CreateCategoryDto) => {
+    try {
+      const response = await apiCreateCategory(categoryData);
+      setCategories(prev => [...prev, response.data]);
+      setError(null);
+      addToast({
+        type: 'success',
+        message: 'Category added successfully!'
+      });
+    } catch (err) {
+      const errorMessage = err instanceof ApiError ? err.message : 'Failed to create category';
+      setError(errorMessage);
+      addToast({
+        type: 'error',
+        message: errorMessage
+      });
+      throw err;
+    }
   };
 
-  const updateCategory = (id: string, updatedData: Partial<Category>) => {
-    setCategories(prev =>
-      prev.map(category =>
-        category.id === id
-          ? { ...category, ...updatedData, updatedAt: new Date() }
-          : category
-      )
-    );
+  const updateCategory = async (id: string, updatedData: Partial<CreateCategoryDto>) => {
+    try {
+      const response = await apiUpdateCategory(id, updatedData);
+      setCategories(prev =>
+        prev.map(category =>
+          category._id === id ? response.data : category
+        )
+      );
+      setError(null);
+      addToast({
+        type: 'success',
+        message: 'Category updated successfully!'
+      });
+    } catch (err) {
+      const errorMessage = err instanceof ApiError ? err.message : 'Failed to update category';
+      setError(errorMessage);
+      addToast({
+        type: 'error',
+        message: errorMessage
+      });
+      throw err;
+    }
   };
 
-  const archiveCategory = (id: string) => {
-    updateCategory(id, { isArchived: true });
+  const archiveCategory = async (id: string) => {
+    try {
+      const response = await apiArchiveCategory(id);
+      setCategories(prev =>
+        prev.map(category =>
+          category._id === id ? response.data : category
+        )
+      );
+      setError(null);
+      addToast({
+        type: 'success',
+        message: 'Category archived successfully!'
+      });
+    } catch (err) {
+      const errorMessage = err instanceof ApiError ? err.message : 'Failed to archive category';
+      setError(errorMessage);
+      addToast({
+        type: 'error',
+        message: errorMessage
+      });
+      throw err;
+    }
   };
 
-  const deleteCategory = (id: string) => {
-    setCategories(prev => prev.filter(category => category.id !== id));
+  const deleteCategory = async (id: string) => {
+    try {
+      await apiDeleteCategory(id);
+      setCategories(prev => prev.filter(category => category._id !== id));
+      setError(null);
+      addToast({
+        type: 'success',
+        message: 'Category deleted successfully!'
+      });
+    } catch (err) {
+      const errorMessage = err instanceof ApiError ? err.message : 'Failed to delete category';
+      setError(errorMessage);
+      addToast({
+        type: 'error',
+        message: errorMessage
+      });
+      throw err;
+    }
   };
 
   return (
@@ -87,6 +167,10 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setSearchTerm,
         sortBy,
         setSortBy,
+        isLoading,
+        error,
+        pagination,
+        setPagination,
       }}
     >
       {children}

@@ -7,6 +7,7 @@ import { TasksPage } from './features/tasks/pages/TasksPage';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { NotFound } from './components/pages/NotFound';
 import { RouteGuard } from './components/guards/RouteGuard';
+import { ToastContainer } from './components/common/Toast';
 
 export const App = () => {
   return (
@@ -30,6 +31,7 @@ export const App = () => {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Layout>
+            <ToastContainer />
           </TaskProvider>
         </CategoryProvider>
       </ToastProvider>
