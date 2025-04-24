@@ -9,7 +9,8 @@ import {
   CheckCircleIcon,
   ArrowPathIcon,
   ClipboardIcon,
-  PlusIcon
+  PlusIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 import { Task, TaskType, TaskFrequency, Status } from '../../../types/task';
 import { useCategories } from '../../../context/CategoryContext';
@@ -17,6 +18,7 @@ import { TimeTracker } from './TimeTracker';
 import { useTasks } from '../../../context/TaskContext';
 import { CheckCircleIcon as SolidCheckCircleIcon } from '@heroicons/react/24/solid';
 import { Button } from '../../../components/common/Button';
+import { DeleteConfirmationModal } from './DeleteConfirmationModal';
 
 interface TaskTableProps {
   tasks: Task[];
@@ -35,6 +37,7 @@ export const TaskTable = ({ tasks, onEdit, onDelete, onToggleCompletion }: TaskT
   const [sortField, setSortField] = useState<SortField>('start_date');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [searchTerm, setSearchTerm] = useState('');
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
 
   // Sorting and filtering
   const sortedAndFilteredTasks = tasks
@@ -106,6 +109,21 @@ export const TaskTable = ({ tasks, onEdit, onDelete, onToggleCompletion }: TaskT
         {frequency.charAt(0).toUpperCase() + frequency.slice(1)}
       </span>
     );
+  };
+
+  const handleDeleteClick = (task: Task) => {
+    setTaskToDelete(task);
+  };
+
+  const handleConfirmDelete = () => {
+    if (taskToDelete) {
+      onDelete(taskToDelete._id);
+      setTaskToDelete(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setTaskToDelete(null);
   };
 
   if (tasks.length === 0) {
@@ -262,7 +280,7 @@ export const TaskTable = ({ tasks, onEdit, onDelete, onToggleCompletion }: TaskT
                       <PencilSquareIcon className="w-5 h-5" />
                     </button>
                     <button
-                      onClick={() => onDelete(task._id)}
+                      onClick={() => handleDeleteClick(task)}
                       className="text-red-600 hover:text-red-900"
                     >
                       <TrashIcon className="w-5 h-5" />
@@ -327,6 +345,14 @@ export const TaskTable = ({ tasks, onEdit, onDelete, onToggleCompletion }: TaskT
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={!!taskToDelete}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        taskName={taskToDelete?.name || ''}
+      />
     </div>
   );
 };
