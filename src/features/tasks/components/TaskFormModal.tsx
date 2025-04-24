@@ -1,57 +1,77 @@
 import React, { useState, useEffect } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { Button } from '../../../components/common/Button';
-import { Task, TaskType, TaskFrequency } from '../../../types/task';
+import { CreateTaskDto, TaskType, TaskFrequency, Status, Task } from '../../../types/task';
 import { useCategories } from '../../../context/CategoryContext';
 
 interface TaskFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  editingTask?: Task;
+  onSubmit: (data: CreateTaskDto, taskId?: string) => void;
+  initialData?: Task;
 }
 
 export const TaskFormModal = ({
   isOpen,
   onClose,
   onSubmit,
-  editingTask
+  initialData
 }: TaskFormModalProps) => {
   const { categories } = useCategories();
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    categoryId: '',
-    type: 'time-based' as TaskType,
-    frequency: 'daily' as TaskFrequency,
-    startDate: new Date().toISOString().split('T')[0],
-    endDate: '',
-    targetDuration: 0,
-    maxCompletions: 1,
-    completionsToday: 0, // Add this initialization
-    isActive: true,
-    status: 'pending' as const
+  const [formData, setFormData] = useState<CreateTaskDto>({
+    name: '',
+    task_type: TaskType.TIME_BASED,
+    task_frequency: TaskFrequency.DAILY,
+    duration: 0,
+    target: 1,
+    start_date: new Date().toISOString().split('T')[0],
+    end_date: '',
+    category: '',
+    status: Status.ACTIVE
   });
 
+  // Helper function to convert dd-MM-yyyy to YYYY-MM-DD
+  const convertDateFormat = (dateStr: string) => {
+    if (!dateStr) return '';
+    const [day, month, year] = dateStr.split('-');
+    return `${year}-${month}-${day}`;
+  };
+
   useEffect(() => {
-    if (editingTask) {
-      setFormData({
-        ...editingTask,
-        startDate: new Date(editingTask.startDate).toISOString().split('T')[0],
-        endDate: editingTask.endDate ? new Date(editingTask.endDate).toISOString().split('T')[0] : '',
-      });
+    if (initialData) {
+      const formattedData = {
+        name: initialData.name,
+        task_type: initialData.task_type,
+        task_frequency: initialData.task_frequency,
+        duration: initialData.duration || 0,
+        target: initialData.target || 1,
+        start_date: convertDateFormat(initialData.start_date),
+        end_date: convertDateFormat(initialData.end_date),
+        category: initialData.category,
+        status: initialData.status
+      };
+      setFormData(formattedData);
     }
-  }, [editingTask]);
+  }, [initialData]);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
+    const submitData = {
       ...formData,
-      startDate: new Date(formData.startDate),
-      endDate: formData.endDate ? new Date(formData.endDate) : undefined,
-    });
+      start_date: new Date(formData.start_date).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      }).split('/').join('-'),
+      end_date: formData.end_date ? new Date(formData.end_date).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      }).split('/').join('-') : ''
+    };
+    onSubmit(submitData, initialData?._id);
     onClose();
   };
 
@@ -64,7 +84,7 @@ export const TaskFormModal = ({
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900">
-                {editingTask ? 'Edit Task' : 'New Task'}
+                {initialData ? 'Edit Task' : 'New Task'}
               </h2>
               <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
                 <XMarkIcon className="w-5 h-5" />
@@ -76,15 +96,15 @@ export const TaskFormModal = ({
               <div className="p-4 space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Title
+                    Name
                   </label>
                   <input
                     type="text"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 
                       focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                    placeholder="Enter task title"
+                    placeholder="Enter task name"
                     required
                   />
                 </div>
@@ -94,15 +114,15 @@ export const TaskFormModal = ({
                     Category
                   </label>
                   <select
-                    value={formData.categoryId}
-                    onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 
                       focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     required
                   >
                     <option value="">Select Category</option>
                     {categories.map(category => (
-                      <option key={category.id} value={category.id}>
+                      <option key={category._id} value={category._id}>
                         {category.name}
                       </option>
                     ))}
@@ -115,13 +135,13 @@ export const TaskFormModal = ({
                       Type
                     </label>
                     <select
-                      value={formData.type}
-                      onChange={(e) => setFormData({ ...formData, type: e.target.value as TaskType })}
+                      value={formData.task_type}
+                      onChange={(e) => setFormData({ ...formData, task_type: e.target.value as TaskType })}
                       className="w-full border border-gray-300 rounded-md px-3 py-2 
                         focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     >
-                      <option value="time-based">Time-based</option>
-                      <option value="yes-no">Yes/No</option>
+                      <option value={TaskType.TIME_BASED}>Time-based</option>
+                      <option value={TaskType.YES_NO}>Yes/No</option>
                     </select>
                   </div>
 
@@ -130,28 +150,27 @@ export const TaskFormModal = ({
                       Frequency
                     </label>
                     <select
-                      value={formData.frequency}
-                      onChange={(e) => setFormData({ ...formData, frequency: e.target.value as TaskFrequency })}
+                      value={formData.task_frequency}
+                      onChange={(e) => setFormData({ ...formData, task_frequency: e.target.value as TaskFrequency })}
                       className="w-full border border-gray-300 rounded-md px-3 py-2 
                         focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     >
-                      <option value="daily">Daily</option>
-                      <option value="weekly">Weekly</option>
-                      <option value="monthly">Monthly</option>
-                      <option value="once">Once</option>
+                      <option value={TaskFrequency.DAILY}>Daily</option>
+                      <option value={TaskFrequency.WEEKLY}>Weekly</option>
+                      <option value={TaskFrequency.MONTHLY}>Monthly</option>
                     </select>
                   </div>
                 </div>
 
-                {formData.type === 'time-based' && (
+                {formData.task_type === TaskType.TIME_BASED && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Target Duration (minutes)
+                      Duration (minutes)
                     </label>
                     <input
                       type="number"
-                      value={formData.targetDuration}
-                      onChange={(e) => setFormData({ ...formData, targetDuration: Number(e.target.value) })}
+                      value={formData.duration}
+                      onChange={(e) => setFormData({ ...formData, duration: Number(e.target.value) })}
                       className="w-full border border-gray-300 rounded-md px-3 py-2 
                         focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                       min="1"
@@ -159,15 +178,15 @@ export const TaskFormModal = ({
                   </div>
                 )}
 
-                {formData.type === 'yes-no' && (
+                {formData.task_type === TaskType.YES_NO && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Max Completions Per Day
+                      Target Completions
                     </label>
                     <input
                       type="number"
-                      value={formData.maxCompletions}
-                      onChange={(e) => setFormData({ ...formData, maxCompletions: Number(e.target.value) })}
+                      value={formData.target}
+                      onChange={(e) => setFormData({ ...formData, target: Number(e.target.value) })}
                       className="w-full border border-gray-300 rounded-md px-3 py-2 
                         focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                       min="1"
@@ -182,8 +201,8 @@ export const TaskFormModal = ({
                     </label>
                     <input
                       type="date"
-                      value={formData.startDate}
-                      onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                      value={formData.start_date}
+                      onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
                       className="w-full border border-gray-300 rounded-md px-3 py-2 
                         focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                       required
@@ -196,8 +215,8 @@ export const TaskFormModal = ({
                     </label>
                     <input
                       type="date"
-                      value={formData.endDate}
-                      onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                      value={formData.end_date}
+                      onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
                       className="w-full border border-gray-300 rounded-md px-3 py-2 
                         focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     />
@@ -209,7 +228,7 @@ export const TaskFormModal = ({
                     Cancel
                   </Button>
                   <Button type="submit">
-                    {editingTask ? 'Save Changes' : 'Create Task'}
+                    {initialData ? 'Save Changes' : 'Create Task'}
                   </Button>
                 </div>
               </div>
