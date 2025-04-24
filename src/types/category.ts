@@ -50,6 +50,7 @@ export interface CategoryContextType {
   addCategory: (category: CreateCategoryDto) => Promise<void>;
   updateCategory: (id: string, category: Partial<CreateCategoryDto>) => Promise<void>;
   archiveCategory: (id: string) => Promise<void>;
+  unarchiveCategory: (id: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   searchTerm: string;
   setSearchTerm: (term: string) => void;

@@ -21,6 +21,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     updateCategory: apiUpdateCategory,
     deleteCategory: apiDeleteCategory,
     archiveCategory: apiArchiveCategory,
+    unarchiveCategory: apiUnarchiveCategory,
   } = useCategoryService();
 
   const fetchCategories = useCallback(async () => {
@@ -151,6 +152,32 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  const unarchiveCategory = async (id: string) => {
+    try {
+      const response = await apiUnarchiveCategory(id);
+      setCategories(prev =>
+        prev.map(category =>
+          category._id === id ? response.data : category
+        )
+      );
+      setError(null);
+      addToast({
+        type: 'success',
+        message: 'Category unarchived successfully!'
+      });
+      // Refresh the list to ensure consistency
+      fetchCategories();
+    } catch (err) {
+      const errorMessage = err instanceof ApiError ? err.message : 'Failed to unarchive category';
+      setError(errorMessage);
+      addToast({
+        type: 'error',
+        message: errorMessage
+      });
+      throw err;
+    }
+  };
+
   const deleteCategory = async (id: string) => {
     try {
       await apiDeleteCategory(id);
@@ -180,6 +207,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         addCategory,
         updateCategory,
         archiveCategory,
+        unarchiveCategory,
         deleteCategory,
         searchTerm,
         setSearchTerm,

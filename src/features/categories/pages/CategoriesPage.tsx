@@ -14,13 +14,28 @@ export const CategoriesPage = () => {
   const [categoryToDelete, setCategoryToDelete] = useState<{id: string; name: string} | null>(null);
   const [categoryToEdit, setCategoryToEdit] = useState<{id: string; name: string; color: string} | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const { categories, addCategory, updateCategory, deleteCategory, archiveCategory } = useCategories();
+  const { 
+    categories, 
+    addCategory, 
+    updateCategory, 
+    deleteCategory, 
+    archiveCategory,
+    unarchiveCategory 
+  } = useCategories();
 
   const filteredCategories = categories.filter(cat => {
     const matchesTab = activeTab === 'archived' ? cat.is_archived : !cat.is_archived;
     const matchesSearch = cat.name.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesTab && matchesSearch;
   });
+
+  const handleArchiveToggle = (id: string, isArchived: boolean) => {
+    if (isArchived) {
+      unarchiveCategory(id);
+    } else {
+      archiveCategory(id);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -121,7 +136,7 @@ export const CategoriesPage = () => {
                 name: category.name,
                 color: category.color
               })}
-              onArchive={(id) => archiveCategory(id)}
+              onArchive={() => handleArchiveToggle(category._id, category.is_archived)}
               onDelete={(id) => setCategoryToDelete({ id, name: category.name })}
               isArchived={category.is_archived}
             />
