@@ -3,13 +3,13 @@ import { Button } from '../../../components/common/Button';
 import { TaskTable } from '../components/TaskTable';
 import { TaskFormModal } from '../components/TaskFormModal';
 import { useTasks } from '../../../context/TaskContext';
-import { Task } from '../../../types/task';
+import { Task, CreateTaskDto } from '../../../types/task';
 import { PlusIcon } from '@heroicons/react/24/outline';
 
 export const TasksPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | undefined>();
-  const { tasks, addTask, updateTask, deleteTask, toggleTaskCompletion } = useTasks();
+  const { tasks, addTask, updateTask, deleteTask } = useTasks();
 
   useEffect(() => {
     const handleOpenModal = () => setIsModalOpen(true);
@@ -17,9 +17,9 @@ export const TasksPage = () => {
     return () => window.removeEventListener('openAddTaskModal', handleOpenModal);
   }, []);
 
-  const handleSubmit = (data: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
-    if (editingTask) {
-      updateTask(editingTask.id, data);
+  const handleSubmit = (data: CreateTaskDto, taskId?: string) => {
+    if (taskId) {
+      updateTask(taskId, data);
     } else {
       addTask(data);
     }
@@ -34,10 +34,6 @@ export const TasksPage = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingTask(undefined);
-  };
-
-  const handleToggleCompletion = (taskId: string) => {
-    toggleTaskCompletion(taskId);
   };
 
   return (
@@ -59,7 +55,6 @@ export const TasksPage = () => {
         tasks={tasks}
         onEdit={handleEdit}
         onDelete={deleteTask}
-        onToggleCompletion={handleToggleCompletion}
       />
 
       {/* Task Form Modal */}
@@ -67,7 +62,7 @@ export const TasksPage = () => {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onSubmit={handleSubmit}
-        editingTask={editingTask}
+        initialData={editingTask}
       />
     </div>
   );
