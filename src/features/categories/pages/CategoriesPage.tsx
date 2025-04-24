@@ -17,7 +17,7 @@ export const CategoriesPage = () => {
   const { categories, addCategory, updateCategory, deleteCategory, archiveCategory } = useCategories();
 
   const filteredCategories = categories.filter(cat => {
-    const matchesTab = activeTab === 'archived' ? cat.isArchived : !cat.isArchived;
+    const matchesTab = activeTab === 'archived' ? cat.is_archived : !cat.is_archived;
     const matchesSearch = cat.name.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesTab && matchesSearch;
   });
@@ -111,15 +111,19 @@ export const CategoriesPage = () => {
         ) : (
           filteredCategories.map(category => (
             <CategoryCard
-              key={category.id}
-              {...category}
-              onEdit={() => setCategoryToEdit({
-                id: category.id,
+              key={category._id}
+              _id={category._id}
+              name={category.name}
+              color={category.color}
+              tasksCount={0} // TODO: Add task count
+              onEdit={(id) => setCategoryToEdit({
+                id,
                 name: category.name,
                 color: category.color
               })}
-              onArchive={() => archiveCategory(category.id)}
-              onDelete={() => setCategoryToDelete({ id: category.id, name: category.name })}
+              onArchive={(id) => archiveCategory(id)}
+              onDelete={(id) => setCategoryToDelete({ id, name: category.name })}
+              isArchived={category.is_archived}
             />
           ))
         )}
@@ -136,7 +140,7 @@ export const CategoriesPage = () => {
             updateCategory(categoryToEdit.id, data);
             setCategoryToEdit(null);
           } else {
-            addCategory({ ...data, isArchived: false });
+            addCategory({ ...data, is_archived: false });
             setIsModalOpen(false);
           }
         }}
