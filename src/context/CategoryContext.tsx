@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
+import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
 import { Category, CategoryContextType, CreateCategoryDto, PaginationMeta } from '../types/category';
 import { useCategoryService } from '../hooks/useCategoryService';
 import { ApiError } from '../services/api/BaseApiService';
@@ -23,41 +23,51 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     archiveCategory: apiArchiveCategory,
   } = useCategoryService();
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setIsLoading(true);
-        const response = await getCategories({
-          search: searchTerm,
-          order: {
-            [sortBy === 'name' ? 'name' : 'created_at']: 'asc'
-          }
-        });
-        setCategories(response.data || []);
-        setPagination(response.meta || null);
-        setError(null);
-      } catch (err) {
-        const errorMessage = err instanceof ApiError ? err.message : 'Failed to fetch categories';
-        setError(errorMessage);
-        addToast({
-          type: 'error',
-          message: errorMessage
-        });
-        setCategories([]); // Reset categories on error
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchCategories();
+  const fetchCategories = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await getCategories({
+        search: searchTerm,
+        order: {
+          [sortBy === 'name' ? 'name' : 'created_at']: 'asc'
+        }
+      });
+      setCategories(response.data || []);
+      setPagination(response.meta || null);
+      setError(null);
+    } catch (err) {
+      const errorMessage = err instanceof ApiError ? err.message : 'Failed to fetch categories';
+      setError(errorMessage);
+      addToast({
+        type: 'error',
+        message: errorMessage
+      });
+      setCategories([]); // Reset categories on error
+    } finally {
+      setIsLoading(false);
+    }
   }, [getCategories, searchTerm, sortBy, addToast]);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+
+  // Refresh data periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchCategories();
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [fetchCategories]);
 
   const filteredAndSortedCategories = useMemo(() => {
     if (!Array.isArray(categories)) return [];
     
     return categories
       .filter(cat => 
-        cat.name.toLowerCase().includes(searchTerm.toLowerCase())
+        cat && cat.name && cat.name.toLowerCase().includes(searchTerm.toLowerCase())
       )
       .sort((a, b) => {
         if (sortBy === 'name') {
@@ -76,6 +86,8 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         type: 'success',
         message: 'Category added successfully!'
       });
+      // Refresh the list to ensure consistency
+      fetchCategories();
     } catch (err) {
       const errorMessage = err instanceof ApiError ? err.message : 'Failed to create category';
       setError(errorMessage);
@@ -100,6 +112,8 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         type: 'success',
         message: 'Category updated successfully!'
       });
+      // Refresh the list to ensure consistency
+      fetchCategories();
     } catch (err) {
       const errorMessage = err instanceof ApiError ? err.message : 'Failed to update category';
       setError(errorMessage);
@@ -124,6 +138,8 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         type: 'success',
         message: 'Category archived successfully!'
       });
+      // Refresh the list to ensure consistency
+      fetchCategories();
     } catch (err) {
       const errorMessage = err instanceof ApiError ? err.message : 'Failed to archive category';
       setError(errorMessage);
@@ -144,6 +160,8 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         type: 'success',
         message: 'Category deleted successfully!'
       });
+      // Refresh the list to ensure consistency
+      fetchCategories();
     } catch (err) {
       const errorMessage = err instanceof ApiError ? err.message : 'Failed to delete category';
       setError(errorMessage);
@@ -171,6 +189,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         error,
         pagination,
         setPagination,
+        refreshCategories: fetchCategories,
       }}
     >
       {children}

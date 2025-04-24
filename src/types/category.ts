@@ -59,4 +59,5 @@ export interface CategoryContextType {
   error: string | null;
   pagination: PaginationMeta | null;
   setPagination: (pagination: PaginationMeta) => void;
+  refreshCategories: () => Promise<void>;
 }

@@ -63,10 +63,10 @@ export class CategoryService extends BaseApiService {
   }
 
   async archiveCategory(id: string): Promise<ApiResponse<Category>> {
-    return this.patch<ApiResponse<Category>>(`${API_ENDPOINTS.category}/${id}/archive`, { is_archived: true });
+    return this.updateCategory(id, { is_archived: true });
   }
 
   async unarchiveCategory(id: string): Promise<ApiResponse<Category>> {
-    return this.patch<ApiResponse<Category>>(`${API_ENDPOINTS.category}/${id}/archive`, { is_archived: false });
+    return this.updateCategory(id, { is_archived: false });
   }
 } 
